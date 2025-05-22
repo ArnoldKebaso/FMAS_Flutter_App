@@ -28,7 +28,7 @@ class FMASApp extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),    // rounded-lg
             ),
-            textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
           ),
         ),
       ),
