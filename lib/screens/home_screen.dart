@@ -520,6 +520,6 @@ class _HomePageState extends State<HomePage> {
         padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
         child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 18)),
       ),
-    );
+    );1
   }
 }
