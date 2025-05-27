@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:go_router/go_router.dart';
 
 // Color theme
 const Color primaryColor = Color(0xFF1E3A8A); // blue-900
@@ -40,6 +41,9 @@ class _HomePageState extends State<HomePage> {
   // FAQ state
   int? _openFAQ;
 
+  // Language state (placeholder)
+  String _currentLanguage = 'en';
+
   @override
   void initState() {
     super.initState();
@@ -72,7 +76,6 @@ class _HomePageState extends State<HomePage> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('All fields are required')));
       return;
     }
-    // Basic validation
     if (_subscriptionMethod == 'email' && !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(_contact)) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid email format')));
       return;
@@ -110,9 +113,127 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _toggleLanguage() {
+    setState(() {
+      _currentLanguage = _currentLanguage == 'en' ? 'sw' : 'en';
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Language changed to ${_currentLanguage == 'en' ? 'English' : 'Swahili'}')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: primaryColor,
+        title: Row(
+          children: [
+            const Icon(Icons.shield, color: secondaryColor, size: 32),
+            const SizedBox(width: 8),
+            const Text(
+              'FMAS',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.language, color: Colors.white),
+            onPressed: _toggleLanguage,
+          ),
+        ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [primaryColor, secondaryColor],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.shield, color: Colors.white, size: 48),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'FMAS',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            _buildDrawerItem('Home', '/home', Icons.home),
+            _buildDrawerItem('About', '/about', Icons.info),
+            ExpansionTile(
+              title: const Text('Get Involved'),
+              leading: const Icon(Icons.volunteer_activism),
+              children: [
+                _buildDrawerItem('Donate', '/donate', Icons.favorite),
+              ],
+            ),
+            _buildDrawerItem('Resources', '/userResources', Icons.book),
+            _buildDrawerItem('Contact', '/contact', Icons.contact_mail),
+            _buildDrawerItem('FAQ', '/faq', Icons.question_answer),
+            const Divider(),
+            ListTile(
+              title: const Text('Subscribe to Newsletter'),
+              leading: const Icon(Icons.mail),
+              onTap: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Newsletter subscription coming soon!')),
+                );
+              },
+            ),
+            const Divider(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.facebook, color: primaryColor),
+                    onPressed: () {},
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.twitter, color: primaryColor),
+                    onPressed: () {},
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.instagram, color: primaryColor),
+                    onPressed: () {},
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.youtube, color: primaryColor),
+                    onPressed: () {},
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                '© ${DateTime.now().year} FMAS. All rights reserved.',
+                style: const TextStyle(color: textLight),
+              ),
+            ),
+          ],
+        ),
+      ),
       body: ListView(
         children: [
           _buildHeroSection(),
@@ -129,6 +250,17 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  ListTile _buildDrawerItem(String title, String route, IconData icon) {
+    return ListTile(
+      title: Text(title),
+      leading: Icon(icon),
+      onTap: () {
+        Navigator.pop(context);
+        context.go(route);
+      },
+    );
+  }
+
   Widget _buildHeroSection() {
     return SizedBox(
       height: MediaQuery.of(context).size.height,
@@ -138,10 +270,7 @@ class _HomePageState extends State<HomePage> {
             controller: _pageController,
             itemCount: _heroImages.length,
             itemBuilder: (context, index) {
-              return Image.asset(
-                _heroImages[index],
-                fit: BoxFit.cover,
-              );
+              return Image.asset(_heroImages[index], fit: BoxFit.cover);
             },
           ),
           Container(color: Colors.black.withOpacity(0.5)),
@@ -399,7 +528,7 @@ class _HomePageState extends State<HomePage> {
                           Text(pub['desc']!, style: const TextStyle(fontSize: 14, color: textLight)),
                           const SizedBox(height: 8),
                           ElevatedButton(
-                            onPressed: () {}, // Replace with actual link handling if needed
+                            onPressed: () {}, // Placeholder for link handling
                             style: ElevatedButton.styleFrom(backgroundColor: secondaryColor),
                             child: const Text('View'),
                           ),
@@ -508,7 +637,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildGradientButton(String text, String route, {bool reverseGradient = false}) {
     return ElevatedButton(
-      onPressed: () => Navigator.pushNamed(context, route),
+      onPressed: () => context.go(route),
       style: ElevatedButton.styleFrom(padding: EdgeInsets.zero, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30))),
       child: Container(
         decoration: BoxDecoration(
@@ -520,6 +649,6 @@ class _HomePageState extends State<HomePage> {
         padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
         child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 18)),
       ),
-    );1
+    );
   }
 }
