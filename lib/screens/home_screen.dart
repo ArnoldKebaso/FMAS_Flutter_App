@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:go_router/go_router.dart';
 
 // Color theme
 const Color primaryColor = Color(0xFF1E3A8A); // blue-900
@@ -40,6 +41,9 @@ class _HomePageState extends State<HomePage> {
   // FAQ state
   int? _openFAQ;
 
+  // Language state (placeholder)
+  String _currentLanguage = 'en';
+
   @override
   void initState() {
     super.initState();
@@ -72,7 +76,6 @@ class _HomePageState extends State<HomePage> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('All fields are required')));
       return;
     }
-    // Basic validation
     if (_subscriptionMethod == 'email' && !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(_contact)) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid email format')));
       return;
@@ -110,9 +113,127 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _toggleLanguage() {
+    setState(() {
+      _currentLanguage = _currentLanguage == 'en' ? 'sw' : 'en';
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Language changed to ${_currentLanguage == 'en' ? 'English' : 'Swahili'}')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: primaryColor,
+        title: Row(
+          children: [
+            const Icon(Icons.shield, color: secondaryColor, size: 32),
+            const SizedBox(width: 8),
+            const Text(
+              'FMAS',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.language, color: Colors.white),
+            onPressed: _toggleLanguage,
+          ),
+        ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [primaryColor, secondaryColor],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.shield, color: Colors.white, size: 48),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'FMAS',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            _buildDrawerItem('Home', '/home', Icons.home),
+            _buildDrawerItem('About', '/about', Icons.info),
+            ExpansionTile(
+              title: const Text('Get Involved'),
+              leading: const Icon(Icons.volunteer_activism),
+              children: [
+                _buildDrawerItem('Donate', '/donate', Icons.favorite),
+              ],
+            ),
+            _buildDrawerItem('Resources', '/userResources', Icons.book),
+            _buildDrawerItem('Contact', '/contact', Icons.contact_mail),
+            _buildDrawerItem('FAQ', '/faq', Icons.question_answer),
+            const Divider(),
+            ListTile(
+              title: const Text('Subscribe to Newsletter'),
+              leading: const Icon(Icons.mail),
+              onTap: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Newsletter subscription coming soon!')),
+                );
+              },
+            ),
+            const Divider(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.facebook, color: primaryColor),
+                    onPressed: () {},
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.chat, color: primaryColor), // Replaced twitter
+                    onPressed: () {},
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.camera, color: primaryColor), // Replaced instagram
+                    onPressed: () {},
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.video_library, color: primaryColor), // Replaced youtube
+                    onPressed: () {},
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                '© ${DateTime.now().year} FMAS. All rights reserved.',
+                style: const TextStyle(color: textLight),
+              ),
+            ),
+          ],
+        ),
+      ),
       body: ListView(
         children: [
           _buildHeroSection(),
@@ -129,6 +250,17 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  ListTile _buildDrawerItem(String title, String route, IconData icon) {
+    return ListTile(
+      title: Text(title),
+      leading: Icon(icon),
+      onTap: () {
+        Navigator.pop(context);
+        context.go(route);
+      },
+    );
+  }
+
   Widget _buildHeroSection() {
     return SizedBox(
       height: MediaQuery.of(context).size.height,
@@ -138,10 +270,7 @@ class _HomePageState extends State<HomePage> {
             controller: _pageController,
             itemCount: _heroImages.length,
             itemBuilder: (context, index) {
-              return Image.asset(
-                _heroImages[index],
-                fit: BoxFit.cover,
-              );
+              return Image.asset(_heroImages[index], fit: BoxFit.cover);
             },
           ),
           Container(color: Colors.black.withOpacity(0.5)),
@@ -198,7 +327,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildWhatWeDoSection() {
-    final items = [
+    final List<Map<String, dynamic>> items = [ // Explicitly typed as List<Map<String, dynamic>>
       {'title': 'Flood Monitoring', 'icon': Icons.location_on, 'image': 'assets/images/floodMonitoring.png', 'text': 'Real-time monitoring of flood-prone areas.'},
       {'title': 'Flood Alerts', 'icon': Icons.notifications, 'image': 'assets/images/alert.png', 'text': 'Timely alerts to keep you informed.'},
       {'title': 'Resource Allocation', 'icon': Icons.favorite, 'image': 'assets/images/resourceAllocation.png', 'text': 'Efficient distribution of resources.'},
@@ -227,15 +356,15 @@ class _HomePageState extends State<HomePage> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 child: Column(
                   children: [
-                    Image.asset(item['image']!, height: 100, fit: BoxFit.contain),
+                    Image.asset(item['image'] as String, height: 100, fit: BoxFit.contain), // Cast to String
                     Padding(
                       padding: const EdgeInsets.all(8),
-                      child: Icon(item['icon'] as IconData, size: 48, color: primaryColor),
+                      child: Icon(item['icon'] as IconData, size: 48, color: primaryColor), // Cast to IconData
                     ),
-                    Text(item['title']!, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    Text(item['title'] as String, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)), // Cast to String
                     Padding(
                       padding: const EdgeInsets.all(8),
-                      child: Text(item['text']!, textAlign: TextAlign.center, style: const TextStyle(fontSize: 14, color: textLight)),
+                      child: Text(item['text'] as String, textAlign: TextAlign.center, style: const TextStyle(fontSize: 14, color: textLight)), // Cast to String
                     ),
                   ],
                 ),
@@ -305,18 +434,18 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 16),
                 MultiSelectDialogField(
-                  items: locations.map((loc) => MultiSelectItem(loc, loc)).toList(),
+                  items: locations.map((loc) => MultiSelectItem<String>(loc, loc)).toList(),
                   title: const Text('Select Locations'),
                   selectedColor: secondaryColor,
                   decoration: BoxDecoration(border: Border.all(color: Colors.grey), borderRadius: BorderRadius.circular(5)),
                   buttonText: const Text('Select Locations'),
-                  onConfirm: (values) => setState(() => _selectedLocations = values.cast<String>()),
+                  onConfirm: (values) => setState(() => _selectedLocations = values),
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: _isSubmitting ? null : _submitSubscription,
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.zero,
+                    padding: EdgeInsets.zero, // Correct usage of EdgeInsets.zero
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                   ),
                   child: Container(
@@ -363,7 +492,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildPublicationsSection() {
-    final publications = [
+    final List<Map<String, String>> publications = [
       {'title': 'Flood Handbook', 'image': 'assets/images/flood.png', 'desc': 'A guide to flood preparedness.', 'link': '/pdfs/EmergencyPlan.pdf'},
       {'title': 'Flood Tutorial', 'image': 'assets/images/alert.png', 'desc': 'Video on flood safety.', 'link': 'https://www.youtube.com/watch?v=i906ouUW-hw'},
       {'title': 'Emergency Protocol', 'image': 'assets/images/Budalangi3.jpg', 'desc': 'Emergency response plan.', 'link': 'https://reliefweb.int/report/kenya/kenya-el-nino-floods-2023-emergency-appeal-mdrke058'},
@@ -399,7 +528,7 @@ class _HomePageState extends State<HomePage> {
                           Text(pub['desc']!, style: const TextStyle(fontSize: 14, color: textLight)),
                           const SizedBox(height: 8),
                           ElevatedButton(
-                            onPressed: () {}, // Replace with actual link handling if needed
+                            onPressed: () {}, // Placeholder for link handling
                             style: ElevatedButton.styleFrom(backgroundColor: secondaryColor),
                             child: const Text('View'),
                           ),
@@ -419,7 +548,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildFAQSection() {
-    final faqs = [
+    final List<Map<String, String>> faqs = [
       {'question': 'What is FMAS?', 'answer': 'FMAS is a flood monitoring and alert system.'},
       {'question': 'How can I subscribe to alerts?', 'answer': 'You can subscribe via email or SMS.'},
       {'question': 'How do I report a flood?', 'answer': 'Use the report feature in the app.'},
@@ -445,7 +574,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildImpactSection() {
-    final stats = [
+    final List<Map<String, dynamic>> stats = [ // Explicitly typed as List<Map<String, dynamic>>
       {'label': 'County Branches', 'value': '12', 'icon': Icons.map, 'image': 'assets/images/regional.png'},
       {'label': 'Regional Offices', 'value': '20', 'icon': Icons.group, 'image': 'assets/images/volunti.png'},
       {'label': 'Members & Volunteers', 'value': '5k+', 'icon': Icons.group, 'image': 'assets/images/volunteer.png'},
@@ -473,13 +602,13 @@ class _HomePageState extends State<HomePage> {
                 elevation: 4,
                 child: Column(
                   children: [
-                    Image.asset(stat['image']!, height: 100, fit: BoxFit.contain),
+                    Image.asset(stat['image'] as String, height: 100, fit: BoxFit.contain), // Cast to String
                     Padding(
                       padding: const EdgeInsets.all(8),
-                      child: Icon(stat['icon'] as IconData, size: 48, color: primaryColor),
+                      child: Icon(stat['icon'] as IconData, size: 48, color: primaryColor), // Cast to IconData
                     ),
-                    Text(stat['value']!, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                    Text(stat['label']!, style: const TextStyle(fontSize: 14, color: textLight)),
+                    Text(stat['value'] as String, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)), // Cast to String
+                    Text(stat['label'] as String, style: const TextStyle(fontSize: 14, color: textLight)), // Cast to String
                   ],
                 ),
               );
@@ -508,7 +637,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildGradientButton(String text, String route, {bool reverseGradient = false}) {
     return ElevatedButton(
-      onPressed: () => Navigator.pushNamed(context, route),
+      onPressed: () => context.go(route),
       style: ElevatedButton.styleFrom(padding: EdgeInsets.zero, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30))),
       child: Container(
         decoration: BoxDecoration(
@@ -520,6 +649,6 @@ class _HomePageState extends State<HomePage> {
         padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
         child: Text(text, style: const TextStyle(color: Colors.white, fontSize: 18)),
       ),
-    );1
+    );
   }
 }
